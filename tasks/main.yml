@@ -1,0 +1,37 @@
+---
+# tasks file for ansible-role-buildbot
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: Create log directory
+  file:
+    path: "{{ buildbot_log_dir }}"
+    mode: 0755
+    owner: "{{ buildbot_user }}"
+    group: "{{ buildbot_group }}"
+    state: directory
+  notify: Restart buildbot
+
+- name: Create db directory
+  file:
+    path: "{{ buildbot_db_dir }}"
+    mode: 0755
+    owner: "{{ buildbot_user }}"
+    group: "{{ buildbot_group }}"
+    state: directory
+  notify: Restart buildbot
+
+- name: Create buildbot.conf
+  template:
+    src: buildbot.conf.j2
+    dest: "{{ buildbot_conf_file }}"
+    validate: echo %s
+  notify: Restart buildbot
+
+- name: Start buildbot
+  service:
+    name: "{{ buildbot_service }}"
+    enabled: true
+    state: started

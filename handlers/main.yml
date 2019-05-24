@@ -1,0 +1,6 @@
+---
+
+- name: Restart buildbot
+  service:
+    name: buildbot
+    state: restarted

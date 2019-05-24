@@ -1,0 +1,6 @@
+---
+
+- name: Install buildbot
+  pkgng:
+    name: buildbot
+    state: present
