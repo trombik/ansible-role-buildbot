@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: Tomoyuki Sakurai
-  description: Configures something
+  description: Configures buildbot
   company: N/A
   license: BSD
   min_ansible_version: 2.0
@@ -9,5 +9,7 @@ galaxy_info:
     - name: FreeBSD
       versions:
         - 11.2
+        - 12.0
   galaxy_tags:
-    - system
+    - buildbot
+    - ci

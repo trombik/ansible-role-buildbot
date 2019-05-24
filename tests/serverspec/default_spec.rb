@@ -3,46 +3,51 @@ require "serverspec"
 
 package = "buildbot"
 service = "buildbot"
-config  = "/etc/buildbot/buildbot.conf"
 user    = "buildbot"
 group   = "buildbot"
-ports   = [PORTS]
-log_dir = "/var/log/buildbot"
-db_dir  = "/var/lib/buildbot"
+ports   = [8010]
+root_dir = "/usr/local/buildbot/master"
+config = "#{root_dir}/master.cfg"
+default_user = "root"
+default_group = "root"
 
 case os[:family]
 when "freebsd"
-  config = "/usr/local/etc/buildbot.conf"
-  db_dir = "/var/db/buildbot"
+  default_group = "wheel"
+  package = "devel/py-buildbot"
 end
 
 describe package(package) do
   it { should be_installed }
 end
 
+describe file root_dir do
+  it { should exist }
+  it { should be_directory }
+  it { should be_mode 755 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+end
+
 describe file(config) do
+  it { should exist }
   it { should be_file }
-  its(:content) { should match Regexp.escape("buildbot") }
-end
-
-describe file(log_dir) do
-  it { should exist }
-  it { should be_mode 755 }
+  it { should be_mode 640 }
   it { should be_owned_by user }
   it { should be_grouped_into group }
-end
-
-describe file(db_dir) do
-  it { should exist }
-  it { should be_mode 755 }
-  it { should be_owned_by user }
-  it { should be_grouped_into group }
+  its(:content) { should match(/from buildbot\.plugins import \*/) }
+  its(:content) { should match(/Managed by ansible/) }
 end
 
 case os[:family]
 when "freebsd"
   describe file("/etc/rc.conf.d/buildbot") do
+    it { should exist }
     it { should be_file }
+    it { should be_mode 644 }
+    it { should be_owned_by default_user }
+    it { should be_grouped_into default_group }
+    its(:content) { should match(/Managed by ansible/) }
   end
 end
 

@@ -1,6 +1,59 @@
 ---
 - hosts: localhost
   roles:
+    - trombik.freebsd_pkg_repo
     - ansible-role-buildbot
   vars:
-    buildbot_config: ""
+    freebsd_pkg_repo:
+      # disable the default repository. `quarterly` does not have buildbot 2.x yet
+      FreeBSD:
+        enabled: "false"
+        state: present
+      FreeBSD_latest:
+        enabled: "true"
+        state: present
+        url: pkg+http://pkg.FreeBSD.org/${ABI}/latest
+        signature_type: fingerprints
+        fingerprints: /usr/share/keys/pkg
+        mirror_type: srv
+
+    buildbot_flags: |
+      buildbot_basedir="{{ buildbot_conf_dir }}"
+      buildbot_user="{{ buildbot_user }}"
+    buildbot_master_cfg_content: |
+      from buildbot.plugins import *
+      c = BuildmasterConfig = {}
+      c['workers'] = [worker.Worker("example-worker", "pass")]
+      c['protocols'] = {'pb': {'port': 9989}}
+      c['change_source'] = []
+      c['change_source'].append(changes.GitPoller(
+              'git://github.com/buildbot/hello-world.git',
+              workdir='gitpoller-workdir', branch='master',
+              pollInterval=300))
+      c['schedulers'] = []
+      c['schedulers'].append(schedulers.SingleBranchScheduler(
+                                  name="all",
+                                  change_filter=util.ChangeFilter(branch='master'),
+                                  treeStableTimer=None,
+                                  builderNames=["runtests"]))
+      c['schedulers'].append(schedulers.ForceScheduler(
+                                  name="force",
+                                  builderNames=["runtests"]))
+      factory = util.BuildFactory()
+      factory.addStep(steps.Git(repourl='git://github.com/buildbot/hello-world.git', mode='incremental'))
+      factory.addStep(steps.ShellCommand(command=["trial", "hello"],
+                                         env={"PYTHONPATH": "."}))
+      c['builders'] = []
+      c['builders'].append(
+          util.BuilderConfig(name="runtests",
+            workernames=["example-worker"],
+            factory=factory))
+      c['services'] = []
+      c['title'] = "Hello World CI"
+      c['titleURL'] = "https://buildbot.github.io/hello-world/"
+      c['buildbotURL'] = "http://localhost:8010/"
+      c['www'] = dict(port=8010,
+                      plugins=dict(waterfall_view={}, console_view={}, grid_view={}))
+      c['db'] = {
+          'db_url' : "sqlite:///state.sqlite",
+      }
