@@ -1,9 +1,13 @@
 ---
 buildbot_user: buildbot
 buildbot_group: buildbot
-buildbot_log_dir: /var/log/buildbot
-buildbot_db_dir: "{{ __buildbot_db_dir }}"
-buildbot_service: buildbot
-buildbot_conf_dir: "{{ __buildbot_conf_dir }}"
-buildbot_conf_file: "{{ __buildbot_conf_dir }}/buildbot.conf"
+buildbot_package: "{{ __buildbot_package }}"
+buildbot_extra_packages: "{{ __buildbot_extra_package }}"
+buildbot_service: "{{ __buildbot_service }}"
+buildbot_root_dir: "{{ __buildbot_root_dir }}"
+buildbot_conf_dir: "{{ buildbot_root_dir }}/master"
+buildbot_conf_file: "{{ buildbot_conf_dir }}/master.cfg"
+
+buildbot_master_cfg_content: ""
 buildbot_flags: ""
+buildbot_create_master_flags: -r
