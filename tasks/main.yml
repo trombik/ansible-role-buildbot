@@ -26,7 +26,16 @@
   notify: Restart buildbot
 
 - name: Create buildbot_conf_dir
-  command: "buildbot create-master {{ buildbot_create_master_flags }} {{ buildbot_conf_dir }}"
+  file:
+    path: "{{ buildbot_conf_dir }}"
+    mode: 0755
+    owner: "{{ buildbot_user }}"
+    group: "{{ buildbot_group }}"
+    state: directory
+  notify: Restart buildbot
+
+- name: Run buildbot create-master
+  command: "{{ buildbot_executable }} create-master {{ buildbot_create_master_flags }} {{ buildbot_conf_dir }}"
   args:
     creates: "{{ buildbot_conf_dir }}/buildbot.tac"
   become: yes
@@ -37,7 +46,7 @@
   template:
     src: master.cfg.j2
     dest: "{{ buildbot_conf_file }}"
-    validate: "buildbot checkconfig %s"
+    validate: "{{ buildbot_executable }} checkconfig %s"
     owner: "{{ buildbot_user }}"
     group: "{{ buildbot_group }}"
     mode: 0640

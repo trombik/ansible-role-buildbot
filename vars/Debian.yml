@@ -1,0 +1,6 @@
+---
+__buildbot_package: python3-buildbot
+__buildbot_extra_package: []
+__buildbot_service: buildmaster@default
+__buildbot_root_dir: /var/lib/buildbot
+__buildbot_executable: /usr/bin/buildbot

@@ -1,0 +1,17 @@
+[Unit]
+Description=Buildbot master
+Wants=network.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile={{ buildbot_conf_dir }}/twistd.pid
+WorkingDirectory={{ buildbot_conf_dir }}
+ExecStart={{ buildbot_executable }} start {{ buildbot_conf_dir }}
+ExecReload={{ buildbot_executable }} reconfig {{ buildbot_conf_dir }}
+ExecStop={{ buildbot_executable }} stop {{ buildbot_conf_dir }}
+Restart=always
+User={{ buildbot_user }}
+
+[Install]
+WantedBy=multi-user.target

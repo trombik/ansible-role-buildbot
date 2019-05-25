@@ -1,7 +1,10 @@
 ---
 - hosts: localhost
   roles:
-    - trombik.freebsd_pkg_repo
+    - name: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - name: trombik.redhat_repo
+      when: ansible_os_family == 'RedHat'
     - ansible-role-buildbot
   vars:
     freebsd_pkg_repo:
@@ -17,9 +20,25 @@
         fingerprints: /usr/share/keys/pkg
         mirror_type: srv
 
-    buildbot_flags: |
+    redhat_repo:
+      epel:
+        mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=epel-{{ ansible_distribution_major_version }}&arch={{ ansible_architecture }}"
+        gpgcheck: yes
+        enabled: yes
+        description: EPEL
+
+    buildbot_flags_ubuntu: |
+      MASTER_ENABLED[1]=1
+      MASTER_NAME[1]="default"
+      MASTER_USER[1]="buildbot"
+      MASTER_BASEDIR[1]="/var/lib/buildbot/masters/default"
+      MASTER_OPTIONS[1]=""
+      MASTER_PREFIXCMD[1]=""
+    buildbot_flags_freebsd: |
       buildbot_basedir="{{ buildbot_conf_dir }}"
       buildbot_user="{{ buildbot_user }}"
+
+    buildbot_flags: "{% if ansible_os_family == 'FreeBSD' %}{{ buildbot_flags_freebsd }}{% elif ansible_os_family == 'Debian' %}{{ buildbot_flags_ubuntu }}{% endif %}"
     buildbot_master_cfg_content: |
       from buildbot.plugins import *
       c = BuildmasterConfig = {}
@@ -57,3 +76,6 @@
       c['db'] = {
           'db_url' : "sqlite:///state.sqlite",
       }
+
+    buildbot_extra_packages: "{% if ansible_os_family == 'Debian' %}[ 'python3-pip' ]{% elif ansible_os_family == 'RedHat' %}[ 'python36-pip', 'python36-devel' ]{% else %}[ 'devel/py-buildbot-www' ]{% endif %}"
+    buildbot_extra_pip_packages: "{% if ansible_os_family == 'Debian' %}[ 'buildbot-www', 'buildbot-waterfall-view', 'buildbot-console-view', 'buildbot-grid-view' ]{% else %}[]{% endif %}"
