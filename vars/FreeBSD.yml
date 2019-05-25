@@ -1,6 +1,7 @@
 ---
 __buildbot_package: devel/py-buildbot
-__buildbot_extra_package:
+__buildbot_extra_packages:
   - devel/py-buildbot-www
 __buildbot_service: buildbot
 __buildbot_root_dir: /usr/local/buildbot
+__buildbot_executable: /usr/local/bin/buildbot

@@ -1,0 +1,6 @@
+---
+__buildbot_package: buildbot[bundle]
+__buildbot_extra_packages: []
+__buildbot_service: buildbot
+__buildbot_root_dir: /var/lib/buildbot
+__buildbot_executable: /usr/local/bin/buildbot

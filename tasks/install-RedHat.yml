@@ -1,0 +1,23 @@
+---
+
+- name: Install extra packages for buildbot
+  yum:
+    name: "{{ buildbot_extra_packages }}"
+    state: present
+
+- name: Install buildbot
+  pip:
+    name: "{{ buildbot_package }}"
+    executable: pip3
+    state: present
+
+- name: Install buildbot_extra_pip_packages
+  pip:
+    name: "{{ buildbot_extra_pip_packages }}"
+    executable: pip3
+    state: present
+
+- name: Create systemctl service file
+  template:
+    src: RedHat.service.j2
+    dest: /etc/systemd/system/buildbot.service
