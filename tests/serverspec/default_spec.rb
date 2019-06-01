@@ -13,7 +13,7 @@ package = case os[:family]
           end
 extra_packages = case os[:family]
                  when "freebsd"
-                   ["devel/py-buildbot-www"]
+                   ["devel/py-buildbot-www", "devel/py-buildbot-console-view", "devel/py-buildbot-grid-view", "devel/py-buildbot-waterfall-view"]
                  when "ubuntu"
                    ["python3-pip"]
                  when "redhat"
@@ -24,6 +24,8 @@ pip_packages = case os[:family]
                  ["buildbot-www", "buildbot-waterfall-view", "buildbot-console-view", "buildbot-grid-view"]
                when "redhat"
                  ["buildbot", "buildbot-www", "buildbot-waterfall-view", "buildbot-console-view", "buildbot-grid-view"]
+               else
+                 []
                end
 service = case os[:family]
           when "ubuntu"
@@ -40,7 +42,12 @@ root_dir = case os[:family]
            else
              "/var/lib/buildbot"
            end
-master_dir = "#{root_dir}/masters/default"
+master_dir = case os[:family]
+             when "ubuntu"
+               "#{root_dir}/masters/default"
+             when "freebsd", "redhat"
+               "#{root_dir}"
+             end
 config = "#{master_dir}/master.cfg"
 default_user = "root"
 default_group = case os[:family]
