@@ -15,7 +15,8 @@ galaxy_info:
       versions:
         - bionic
     - name: EL
-      versions: 7
+      versions:
+        - 7
   galaxy_tags:
     - buildbot
     - ci
