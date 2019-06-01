@@ -6,7 +6,7 @@ buildbot_extra_packages: "{{ __buildbot_extra_package }}"
 buildbot_extra_pip_packages: "{{ __buildbot_extra_pip_package }}"
 buildbot_service: "{{ __buildbot_service }}"
 buildbot_root_dir: "{{ __buildbot_root_dir }}"
-buildbot_conf_dir: "{{ buildbot_root_dir }}/masters/default"
+buildbot_conf_dir: "{{ buildbot_root_dir }}"
 buildbot_conf_file: "{{ buildbot_conf_dir }}/master.cfg"
 buildbot_executable: "{{ __buildbot_executable }}"
 

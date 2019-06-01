@@ -15,7 +15,7 @@
       FreeBSD_latest:
         enabled: "true"
         state: present
-        url: pkg+http://pkg.FreeBSD.org/${ABI}/latest
+        url: pkg+https://pkg.FreeBSD.org/${ABI}/latest
         signature_type: fingerprints
         fingerprints: /usr/share/keys/pkg
         mirror_type: srv
@@ -27,11 +27,12 @@
         enabled: yes
         description: EPEL
 
+    buildbot_conf_dir: "{% if ansible_os_family == 'Debian' %}{{ buildbot_root_dir }}/masters/default{% else %}{{ buildbot_root_dir }}{% endif %}"
     buildbot_flags_ubuntu: |
       MASTER_ENABLED[1]=1
       MASTER_NAME[1]="default"
       MASTER_USER[1]="buildbot"
-      MASTER_BASEDIR[1]="/var/lib/buildbot/masters/default"
+      MASTER_BASEDIR[1]="{{ buildbot_conf_dir }}"
       MASTER_OPTIONS[1]=""
       MASTER_PREFIXCMD[1]=""
     buildbot_flags_freebsd: |
