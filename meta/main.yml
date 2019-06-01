@@ -1,5 +1,6 @@
 ---
 galaxy_info:
+  role_name: buildbot
   author: Tomoyuki Sakurai
   description: Configures buildbot
   company: N/A
