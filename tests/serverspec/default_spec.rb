@@ -46,7 +46,7 @@ master_dir = case os[:family]
              when "ubuntu"
                "#{root_dir}/masters/default"
              when "freebsd", "redhat"
-               "#{root_dir}"
+               root_dir.to_s
              end
 config = "#{master_dir}/master.cfg"
 default_user = "root"
