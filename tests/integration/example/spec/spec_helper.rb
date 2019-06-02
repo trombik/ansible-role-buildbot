@@ -29,7 +29,7 @@ if ENV["JENKINS_HOME"]
 end
 
 Infrataster::Server.define(
-  :client1,
+  :worker1,
   "192.168.21.100",
   vagrant: true
 )

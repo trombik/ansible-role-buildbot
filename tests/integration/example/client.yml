@@ -9,4 +9,53 @@
 
   pre_tasks:
   roles:
-    - buildbot
+    - name: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - name: trombik.buildbot_worker
+  vars:
+    freebsd_pkg_repo:
+      FreeBSD:
+        enabled: "false"
+        state: present
+      FreeBSD_latest:
+        enabled: "true"
+        state: present
+        url: pkg+https://pkg.FreeBSD.org/${ABI}/latest
+        signature_type: fingerprints
+        fingerprints: /usr/share/keys/pkg
+        mirror_type: srv
+    buildbot_worker_config: |
+      import os
+      from buildbot_worker.bot import Worker
+      from twisted.application import service
+      basedir = '{{ buildbot_worker_conf_dir }}'
+      rotateLength = 10000000
+      maxRotatedFiles = 10
+      # if this is a relocatable tac file, get the directory containing the TAC
+      if basedir == '.':
+          import os.path
+          basedir = os.path.abspath(os.path.dirname(__file__))
+      # note: this line is matched against to check that this is a worker
+      # directory; do not edit it.
+      application = service.Application('buildbot-worker')
+      from twisted.python.logfile import LogFile
+      from twisted.python.log import ILogObserver, FileLogObserver
+      logfile = LogFile.fromFullPath(
+          os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
+          maxRotatedFiles=maxRotatedFiles)
+      application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+      workername = 'worker1'
+      buildmaster_host = '192.168.21.200'
+      port = 9989
+      passwd = 'pass'
+      keepalive = 600
+      umask = None
+      maxdelay = 300
+      numcpus = None
+      allow_shutdown = None
+      maxretries = None
+      s = Worker(buildmaster_host, port, workername, passwd, basedir,
+                 keepalive, umask=umask, maxdelay=maxdelay,
+                 numcpus=numcpus, allow_shutdown=allow_shutdown,
+                 maxRetries=maxretries)
+      s.setServiceParent(application)
