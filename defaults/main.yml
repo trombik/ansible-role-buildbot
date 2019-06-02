@@ -3,7 +3,7 @@ buildbot_user: buildbot
 buildbot_group: buildbot
 buildbot_package: "{{ __buildbot_package }}"
 buildbot_extra_packages: "{{ __buildbot_extra_package }}"
-buildbot_extra_pip_packages: "{{ __buildbot_extra_pip_package }}"
+buildbot_extra_pip_packages: []
 buildbot_service: "{{ __buildbot_service }}"
 buildbot_root_dir: "{{ __buildbot_root_dir }}"
 buildbot_conf_dir: "{{ buildbot_root_dir }}"
