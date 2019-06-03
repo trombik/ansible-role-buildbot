@@ -3,6 +3,17 @@
 Install `buildbot` master. For `buildbot` worker, use
 `trombik.buildbot_worker` role.
 
+A complete master-worker setup can be found at
+(tests/integration/master_worker)[tests/integration/master_worker]. Install
+`vagrant` and `VirtualBox`, than type:
+
+```sh
+bundle exec rake prepare
+```
+
+The web interface is located at
+(http://192.168.21.200:8010/)[http://192.168.21.200:8010/].
+
 # Requirements
 
 None
