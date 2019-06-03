@@ -9,6 +9,7 @@
 
   pre_tasks:
   roles:
+    - name: trombik.git
     - name: trombik.freebsd_pkg_repo
       when: ansible_os_family == 'FreeBSD'
     - ansible-role-buildbot
@@ -32,6 +33,30 @@
     buildbot_flags: "{{ buildbot_flags_freebsd }}"
     buildbot_master_cfg_content: |
       from buildbot.plugins import *
+      # vim: ft=python
+      git_pull = steps.Git(repourl='https://github.com/trombik/freebsd-ports-mini',
+              branch='20190409')
+      create_db_dir = steps.ShellCommand(name='Create PORT_DBDIR',
+              command='mkdir -p /usr/local/etc/buildbot_worker/pkg/build/var/db/ports')
+      make = steps.ShellCommand(
+              name='make',
+              env={'PORT_DBDIR': '/usr/local/etc/buildbot_worker/pkg/build/var/db/ports'},
+              command='make -C ports-mgmt/pkg',
+              description='make pkg from ports')
+      make_clean = steps.ShellCommand(
+              name='make clean',
+              env={'PORT_DBDIR': '/usr/local/etc/buildbot_worker/pkg/build/var/db/ports'},
+              command='make -C ports-mgmt/pkg clean',
+              description='make clean'
+              )
+      build_pkg = util.BuildFactory()
+      build_pkg.addStep(git_pull)
+      build_pkg.addStep(create_db_dir)
+      build_pkg.addStep(make)
+      build_pkg.addStep(make_clean)
+      hourlyscheduler = schedulers.Periodic(name="hourly",
+                                            builderNames=["pkg"],
+                                            periodicBuildTimer=3600)
       c = BuildmasterConfig = {}
       c['workers'] = [worker.Worker("worker1", "pass")]
       c['protocols'] = {'pb': {'port': 9989}}
@@ -40,6 +65,15 @@
               'git://github.com/buildbot/hello-world.git',
               workdir='gitpoller-workdir', branch='master',
               pollInterval=300))
+
+      c['change_source'].append(changes.GitPoller(
+          'https://github.com/trombik/freebsd-ports-mini',
+          workdir='ports',
+          branch='20190409',
+          pollAtLaunch=True,
+          gitbin='/usr/local/bin/git',
+          pollInterval=300))
+
       c['schedulers'] = []
       c['schedulers'].append(schedulers.SingleBranchScheduler(
                                   name="all",
@@ -49,6 +83,8 @@
       c['schedulers'].append(schedulers.ForceScheduler(
                                   name="force",
                                   builderNames=["runtests"]))
+      c['schedulers'].append(hourlyscheduler)
+
       factory = util.BuildFactory()
       factory.addStep(steps.Git(repourl='git://github.com/buildbot/hello-world.git', mode='incremental'))
       factory.addStep(steps.ShellCommand(command=["trial", "hello"],
@@ -58,6 +94,10 @@
           util.BuilderConfig(name="runtests",
             workernames=["worker1"],
             factory=factory))
+      c['builders'].append(
+              util.BuilderConfig(name='pkg',
+                  workernames=['worker1'],
+                  factory=build_pkg))
       c['services'] = []
       c['title'] = "Hello World CI"
       c['titleURL'] = "https://buildbot.github.io/hello-world/"
