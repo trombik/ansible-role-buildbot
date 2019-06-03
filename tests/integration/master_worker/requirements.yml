@@ -1,3 +1,4 @@
 ---
 - name: trombik.freebsd_pkg_repo
 - name: trombik.buildbot_worker
+- name: trombik.git

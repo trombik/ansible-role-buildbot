@@ -9,6 +9,7 @@
 
   pre_tasks:
   roles:
+    - name: trombik.git
     - name: trombik.freebsd_pkg_repo
       when: ansible_os_family == 'FreeBSD'
     - name: trombik.buildbot_worker
