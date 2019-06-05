@@ -12,4 +12,6 @@ buildbot_executable: "{{ __buildbot_executable }}"
 
 buildbot_master_cfg_content: ""
 buildbot_flags: ""
+buildbot_create_master_executable: "{{ buildbot_executable }}"
+buildbot_create_master_user: "{{ buildbot_user }}"
 buildbot_create_master_flags: -r

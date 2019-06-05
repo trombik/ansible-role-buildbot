@@ -35,11 +35,11 @@
   notify: Restart buildbot
 
 - name: Run buildbot create-master
-  command: "{{ buildbot_executable }} create-master {{ buildbot_create_master_flags }} {{ buildbot_conf_dir }}"
+  command: "{{ buildbot_create_master_executable }} create-master {{ buildbot_create_master_flags }} {{ buildbot_conf_dir }}"
   args:
     creates: "{{ buildbot_conf_dir }}/buildbot.tac"
   become: yes
-  become_user: "{{ buildbot_user }}"
+  become_user: "{{ buildbot_create_master_user }}"
   notify: Restart buildbot
 
 - name: Create master.cfg

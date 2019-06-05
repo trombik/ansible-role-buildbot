@@ -34,6 +34,8 @@ None
 | `buildbot_executable` | path to `buildbot` executable | `{{ __buildbot_executable }}` |
 | `buildbot_master_cfg_content` content of the configuration file | | `""` |
 | `buildbot_flags` | content of startup configuration file | `""` |
+| `buildbot_create_master_executable` | path to command to run `create-master` | "{{ buildbot_executable }}"
+| `buildbot_create_master_user` | user to run `create-master` | "{{ buildbot_user }}"
 | `buildbot_create_master_flags` | command line flags to pass `buildbot create-master` command | `-r` |
 
 ## Debian
