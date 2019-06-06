@@ -1,0 +1,16 @@
+---
+
+- name: Install gcc48
+  # binaries in platformio package require libstdc++.so.6
+  pkgng:
+    name: devel/gcc48
+    state: present
+
+- name: Install platformio
+  pip:
+    name: platformio
+    executable: pip-2.7
+    extra_args: --user
+  become: yes
+  become_user: buildbot
+  become_flags: -H
