@@ -1,3 +1,11 @@
+## Release 1.1.0
+
+* 6c50af5 bugfix: QA
+* 387504d bugfix: fix README
+* ccee4dc bugfix: update README
+* b2c92ca bugfix: overhaul integration test
+* 57df9b6 feature: add additional variables to run `create-master`
+
 ## Release 1.0.2
 
 * be9ae80 bugfix: QA
