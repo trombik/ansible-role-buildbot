@@ -12,7 +12,7 @@ bundle exec rake prepare
 ```
 
 The web interface is located at
-(http://192.168.21.200:8010/)[http://192.168.21.200:8010/].
+[http://192.168.21.200:8010/](http://192.168.21.200:8010/).
 
 # Requirements
 
