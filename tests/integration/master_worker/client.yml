@@ -9,11 +9,16 @@
 
   pre_tasks:
   roles:
-    - name: trombik.git
     - name: trombik.freebsd_pkg_repo
-      when: ansible_os_family == 'FreeBSD'
+    - name: trombik.git
+    - name: trombik.pip
     - name: trombik.buildbot_worker
+    - name: install_platformio
   vars:
+    pip_packages:
+      - py27-pip
+      - py36-pip
+
     freebsd_pkg_repo:
       FreeBSD:
         enabled: "false"
@@ -25,6 +30,9 @@
         signature_type: fingerprints
         fingerprints: /usr/share/keys/pkg
         mirror_type: srv
+    buildbot_worker_flags: |
+      buildbot_worker_basedir="{{ buildbot_worker_conf_dir }}"
+
     buildbot_worker_config: |
       import os
       from buildbot_worker.bot import Worker
