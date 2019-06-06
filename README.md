@@ -4,7 +4,7 @@ Install `buildbot` master. For `buildbot` worker, use
 `trombik.buildbot_worker` role.
 
 A complete master-worker setup can be found at
-(tests/integration/master_worker)[tests/integration/master_worker]. Install
+[tests/integration/master_worker](tests/integration/master_worker). Install
 `vagrant` and `VirtualBox`, than type:
 
 ```sh
