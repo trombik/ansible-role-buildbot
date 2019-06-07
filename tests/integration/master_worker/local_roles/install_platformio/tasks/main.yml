@@ -3,7 +3,7 @@
 - name: Install gcc48
   # binaries in platformio package require libstdc++.so.6
   pkgng:
-    name: devel/gcc48
+    name: lang/gcc48
     state: present
 
 - name: Install platformio
