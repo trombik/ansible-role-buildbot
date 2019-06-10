@@ -3,3 +3,5 @@
 - name: trombik.buildbot_worker
 - name: trombik.git
 - name: trombik.pip
+- name: trombik.poudriere
+- name: trombik.sudo

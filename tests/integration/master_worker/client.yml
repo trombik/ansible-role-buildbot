@@ -10,26 +10,73 @@
   pre_tasks:
   roles:
     - name: trombik.freebsd_pkg_repo
+      when:
+        - ansible_os_family == 'FreeBSD'
     - name: trombik.git
     - name: trombik.pip
+      when:
+        - ansible_os_family == 'FreeBSD'
+    - name: install_openbsd_ports
+      when: ansible_os_family == 'OpenBSD'
     - name: trombik.buildbot_worker
     - name: install_platformio
+      when:
+        - ansible_os_family == 'FreeBSD'
+    - name: trombik.poudriere
+      when:
+        - ansible_os_family == 'FreeBSD'
+    - name: trombik.sudo
+      when:
+        - ansible_os_family == 'FreeBSD'
   vars:
-    pip_packages:
-      - py27-pip
-      - py36-pip
+    sudo_configs:
+      - name: buildbot
+        content: |
+          Cmnd_Alias POUDRIERE = /usr/local/bin/poudriere
+          buildbot ALL = (root) NOPASSWD: POUDRIERE
+
+    # used for platformio
+    pip_packages: "{% if ansible_os_family == 'FreeBSD' %}[ 'py27-pip', 'py36-pip' ]{% else %}[]{% endif %}"
 
     freebsd_pkg_repo:
       FreeBSD:
         enabled: "false"
         state: present
       FreeBSD_latest:
+        # use buildbot 2.x in latest
         enabled: "true"
         state: present
         url: pkg+https://pkg.FreeBSD.org/${ABI}/latest
         signature_type: fingerprints
         fingerprints: /usr/share/keys/pkg
         mirror_type: srv
+
+    poudriere_package: ports-mgmt/poudriere-devel
+    poudriere_make_conf_files:
+      - name: make.conf
+        state: present
+        content: |
+          LICENSES_ACCEPTED=MSPAT OSI
+          MAKE_JOB_NUMBERS=3
+    poudriere_config:
+      BASEFS: /usr/local/poudriere
+      FREEBSD_HOST: http://ftp.freebsd.org
+      NO_ZFS: "yes"
+      GIT_URL: "https://github.com/freebsd/freebsd-ports.git"
+      CHECK_CHANGED_OPTIONS: verbose
+      NOLINUX: "yes"
+      CCACHE_DIR: /var/cache/ccache
+    poudriere_ports:
+      freebsd:
+        method: git
+        branch: master
+        state: present
+    poudriere_jails:
+      "12_0":
+        method: http
+        version: 12.0-RELEASE
+        state: present
+
     buildbot_worker_flags: |
       buildbot_worker_basedir="{{ buildbot_worker_conf_dir }}"
 
@@ -53,7 +100,7 @@
           os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
           maxRotatedFiles=maxRotatedFiles)
       application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
-      workername = 'worker1'
+      workername = '{% if ansible_os_family == 'FreeBSD' %}worker1{% else %}worker2{% endif %}'
       buildmaster_host = '192.168.21.200'
       port = 9989
       passwd = 'pass'
