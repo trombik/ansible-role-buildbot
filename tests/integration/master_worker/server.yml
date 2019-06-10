@@ -33,6 +33,7 @@
     buildbot_create_master_flags: "-r"
     buildbot_master_cfg_content: |
       from buildbot.plugins import *
+      import os
       # vim: ft=python
 
       c = BuildmasterConfig = {}
@@ -40,7 +41,20 @@
       # builders:
       c['builders'] = []
       #
-      # ports build
+      # OpenBSD ports build
+      build_dir = '/var/buildslave/openbsd_pkg/build/'
+      build_as_user_flags = 'WRKOBJDIR={base}/pobj PACKAGE_REPOSITORY={base}/packages BULK_COOKIES_DIR={base}/bulk UPDATE_COOKIES_DIR={base}/update DISTDIR={base}/distfiles PLIST_REPOSITORY={base}/plist'.format(base = build_dir)
+      build_openbsd_pkg = util.BuildFactory()
+      build_openbsd_pkg.addStep(steps.ShellCommand(
+          name = 'make',
+          command = 'make -C /usr/ports/games/sl {flags}'.format(flags = build_as_user_flags),
+          description = 'make games/sl'
+          ))
+      build_openbsd_pkg.addStep(steps.ShellCommand(
+          name = 'make clean',
+          command = 'make -C /usr/ports/games/sl {flags} clean'.format(flags = build_as_user_flags)
+          ))
+      # FreeBSD ports build
       build_pkg = util.BuildFactory()
 
       build_pkg.addStep(steps.Git(
@@ -62,6 +76,15 @@
           env={'PORT_DBDIR': '/usr/local/buildbot_worker/pkg/build/var/db/ports'},
           command='make -C ports-mgmt/pkg clean',
           description='make clean'))
+
+      # poudriere bulk build
+      build_poudriere = util.BuildFactory()
+      build_poudriere.addStep(steps.ShellCommand(
+          name = 'poudriere bulk',
+          command = 'sudo poudriere bulk -p freebsd -j 12_0 -C ports-mgmt/pkg',
+          env = {
+              'PATH': '/usr/local/buildbot_worker/.local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin/',
+              'HOME': '/usr/local/buildbot_worker'}))
 
       # pio build
       build_pio = util.BuildFactory()
@@ -104,6 +127,16 @@
                   name = 'pio',
                   workernames = ['worker1'],
                   factory = build_pio))
+      c['builders'].append(
+              util.BuilderConfig(
+                  name = 'poudriere',
+                  workernames = ['worker1'],
+                  factory = build_poudriere))
+      c['builders'].append(
+              util.BuilderConfig(
+                  name = 'openbsd_pkg',
+                  workernames = ['worker2'],
+                  factory = build_openbsd_pkg))
 
       # schedulers
       c['schedulers'] = []
@@ -118,13 +151,19 @@
       c['schedulers'].append(schedulers.ForceScheduler(
           name="force_pio",
           builderNames=["pio"]))
+      c['schedulers'].append(schedulers.ForceScheduler(
+          name="force_poudriere",
+          builderNames=["poudriere"]))
       c['schedulers'].append(schedulers.Periodic(
           name = "hourly",
-          builderNames = ["pkg", "pio"],
+          builderNames = ["pkg", "pio", "poudriere"],
           periodicBuildTimer=3600))
+      c['schedulers'].append(schedulers.ForceScheduler(
+          name="force_openbsd_pkg",
+          builderNames=["openbsd_pkg"]))
 
       # master configuration
-      c['workers'] = [worker.Worker("worker1", "pass")]
+      c['workers'] = [worker.Worker("worker1", "pass"), worker.Worker("worker2", "pass")]
       c['protocols'] = {'pb': {'port': 9989}}
 
       c['change_source'] = []
