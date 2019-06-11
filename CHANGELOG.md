@@ -1,3 +1,12 @@
+## Release 1.1.1
+
+* 0fcac02 bugfix: add a link
+* 280f44f bugfix: update README
+* efacff4 bugfix: increase memory
+* 2707f66 bugfix: refactor the integration test
+* cfb345b bugfix: add OpenBSD worker and create poudriere build
+* 3dfbe45 bugfix: s/devel/lang/
+
 ## Release 1.1.0
 
 * 6c50af5 bugfix: QA
