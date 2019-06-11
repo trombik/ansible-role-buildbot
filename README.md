@@ -1,7 +1,7 @@
-# ansible-role-buildbot
+# trombik.buildbot
 
 Install `buildbot` master. For `buildbot` worker, use
-`trombik.buildbot_worker` role.
+[`trombik.buildbot_worker`](https://github.com/trombik/ansible-role-buildbot_worker) role.
 
 A complete master-worker setup can be found at
 [tests/integration/master_worker](tests/integration/master_worker). Install
