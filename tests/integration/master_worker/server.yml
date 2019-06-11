@@ -40,53 +40,64 @@
       #
       # builders:
       c['builders'] = []
-      #
+
       # OpenBSD ports build
-      build_dir = '/var/buildslave/openbsd_pkg/build/'
+      # build games/sl in the ports tree as a user. see ports(7)
+      build_dir = '/var/buildslave/openbsd_pkg/build'
+      port_name = 'games/sl'
       build_as_user_flags = 'WRKOBJDIR={base}/pobj PACKAGE_REPOSITORY={base}/packages BULK_COOKIES_DIR={base}/bulk UPDATE_COOKIES_DIR={base}/update DISTDIR={base}/distfiles PLIST_REPOSITORY={base}/plist'.format(base = build_dir)
       build_openbsd_pkg = util.BuildFactory()
       build_openbsd_pkg.addStep(steps.ShellCommand(
           name = 'make',
-          command = 'make -C /usr/ports/games/sl {flags}'.format(flags = build_as_user_flags),
+          command = 'make -C /usr/ports/{port} {flags}'.format(flags = build_as_user_flags, port = port_name),
           description = 'make games/sl'
           ))
       build_openbsd_pkg.addStep(steps.ShellCommand(
           name = 'make clean',
-          command = 'make -C /usr/ports/games/sl {flags} clean'.format(flags = build_as_user_flags)
-          ))
+          command = 'make -C /usr/ports/{port} {flags} clean'.format(flags = build_as_user_flags, port = port_name)))
+
       # FreeBSD ports build
+      # build ports-mgmt/pkg in my ports tree.
       build_pkg = util.BuildFactory()
+      port_name = 'ports-mgmt/pkg'
+      port_dbdir = '/usr/local/buildbot_worker/pkg/build/var/db/ports'
 
       build_pkg.addStep(steps.Git(
           repourl = 'https://github.com/trombik/freebsd-ports-mini',
           branch = '20190409'))
-
       build_pkg.addStep(steps.ShellCommand(
           name = 'Create PORT_DBDIR',
-          command = 'mkdir -p /usr/local/buildbot_worker/pkg/build/var/db/ports'))
-
+          command = 'mkdir -p {port_dbdir}'.format(port_dbdir = port_dbdir)))
       build_pkg.addStep(steps.ShellCommand(
           name = 'make',
-          env = {'PORT_DBDIR': '/usr/local/buildbot_worker/pkg/build/var/db/ports'},
-          command = 'make -C ports-mgmt/pkg',
+          env = {'PORT_DBDIR': port_dbdir},
+          command = 'make -C {port_name}'.format(port_name = port_name),
           description = 'make pkg from ports'))
-
       build_pkg.addStep(steps.ShellCommand(
           name='make clean',
-          env={'PORT_DBDIR': '/usr/local/buildbot_worker/pkg/build/var/db/ports'},
-          command='make -C ports-mgmt/pkg clean',
+          env={'PORT_DBDIR': port_dbdir},
+          command='make -C {port_name} clean'.format(port_name = port_name),
           description='make clean'))
 
       # poudriere bulk build
+      # build ports-mgmt/pkg with poudriere.
       build_poudriere = util.BuildFactory()
       build_poudriere.addStep(steps.ShellCommand(
+
+          # use `poudriere bulk` as `poudriered` is still alpha
           name = 'poudriere bulk',
           command = 'sudo poudriere bulk -p freebsd -j 12_0 -C ports-mgmt/pkg',
-          env = {
-              'PATH': '/usr/local/buildbot_worker/.local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin/',
-              'HOME': '/usr/local/buildbot_worker'}))
+
+          # send SIGINFO instead of SIGKILL.
+          #
+          # the command runs as root. as such, attempting to kill the
+          # process by user `buildbot` does not work. and when the master does
+          # anyway, the jail would not be destroyed, causing next attempt to
+          # run poudriere to fail.
+          interruptSignal = 'INFO'))
 
       # pio build
+      # build an example platformio project.
       build_pio = util.BuildFactory()
       build_pio.addStep(steps.Git(
           repourl = 'https://github.com/platformio/platformio-examples',
@@ -145,22 +156,15 @@
           change_filter = util.ChangeFilter(branch='master'),
           treeStableTimer = None,
           builderNames = ["runtests"]))
+      # `force` build, allows users to build manually
       c['schedulers'].append(schedulers.ForceScheduler(
           name="force",
-          builderNames=["runtests"]))
-      c['schedulers'].append(schedulers.ForceScheduler(
-          name="force_pio",
-          builderNames=["pio"]))
-      c['schedulers'].append(schedulers.ForceScheduler(
-          name="force_poudriere",
-          builderNames=["poudriere"]))
+          builderNames = ["runtests", "pio", "poudriere", "pkg", "openbsd_pkg"]))
+      # hourly scheduler
       c['schedulers'].append(schedulers.Periodic(
           name = "hourly",
-          builderNames = ["pkg", "pio", "poudriere"],
-          periodicBuildTimer=3600))
-      c['schedulers'].append(schedulers.ForceScheduler(
-          name="force_openbsd_pkg",
-          builderNames=["openbsd_pkg"]))
+          builderNames = ["pkg", "pio", "poudriere", "pkg", "openbsd_pkg"],
+          periodicBuildTimer = 3600))
 
       # master configuration
       c['workers'] = [worker.Worker("worker1", "pass"), worker.Worker("worker2", "pass")]
