@@ -17,7 +17,7 @@ extra_packages = case os[:family]
                  when "ubuntu"
                    ["python3-pip"]
                  when "redhat"
-                   ["python36-pip"]
+                   ["python36-pip", "openssl-devel"]
                  end
 pip_packages = case os[:family]
                when "ubuntu"
