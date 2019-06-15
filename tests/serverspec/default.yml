@@ -78,5 +78,5 @@
           'db_url' : "sqlite:///state.sqlite",
       }
 
-    buildbot_extra_packages: "{% if ansible_os_family == 'Debian' %}[ 'python3-pip' ]{% elif ansible_os_family == 'RedHat' %}[ 'python36-pip', 'python36-devel' ]{% else %}[ 'devel/py-buildbot-www' ]{% endif %}"
+    buildbot_extra_packages: "{% if ansible_os_family == 'Debian' %}[ 'python3-pip' ]{% elif ansible_os_family == 'RedHat' %}[ 'python36-pip', 'python36-devel', 'openssl-devel' ]{% else %}[ 'devel/py-buildbot-www' ]{% endif %}"
     buildbot_extra_pip_packages: "{% if ansible_os_family == 'Debian' %}[ 'buildbot-www', 'buildbot-waterfall-view', 'buildbot-console-view', 'buildbot-grid-view' ]{% else %}[]{% endif %}"
