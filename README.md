@@ -25,7 +25,7 @@ None
 | `buildbot_user` | user of `buildbot` | `buildbot` |
 | `buildbot_group` | group of `buildbot` | `buildbot` |
 | `buildbot_package` | package name of `buildbot` | `{{ __buildbot_package }}` |
-| `buildbot_extra_packages` | list of additional packages to install | `{{ __buildbot_extra_package }}` |
+| `buildbot_extra_packages` | list of additional packages to install | `{{ __buildbot_extra_packages }}` |
 | `buildbot_extra_pip_packages` | list of additional pip packages to install | `[]` |
 | `buildbot_service` | name of `buildbot` service | `{{ __buildbot_service }}` |
 | `buildbot_root_dir` | path to root directory of `buildbot`, usually same as `buildbot_conf_dir` | `{{ __buildbot_root_dir }}` |
@@ -43,7 +43,7 @@ None
 | Variable | Default |
 |----------|---------|
 | `__buildbot_package` | `python3-buildbot` |
-| `__buildbot_extra_package` | `[]` |
+| `__buildbot_extra_packages` | `[]` |
 | `__buildbot_service` | `buildmaster@default` |
 | `__buildbot_root_dir` | `/var/lib/buildbot` |
 | `__buildbot_executable` | `/usr/bin/buildbot` |
