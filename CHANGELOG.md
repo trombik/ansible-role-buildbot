@@ -1,3 +1,8 @@
+## Release 1.1.2
+
+* 8b9711c bugfix: on RedHat, openssl-devel must be installed
+* 95638e6 bugfix: s/__buildbot_extra_package/__buildbot_extra_packages/
+
 ## Release 1.1.1
 
 * 0fcac02 bugfix: add a link
