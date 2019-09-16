@@ -14,6 +14,8 @@
   pip:
     name: "{{ buildbot_extra_pip_packages }}"
     state: present
+  when:
+    - buildbot_extra_pip_packages | length > 0
 
 - name: Create /etc/rc.conf.d/buildbot
   template:

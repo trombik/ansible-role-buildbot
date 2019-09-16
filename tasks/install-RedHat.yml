@@ -16,6 +16,8 @@
     name: "{{ buildbot_extra_pip_packages }}"
     executable: pip3
     state: present
+  when:
+    - buildbot_extra_pip_packages | length > 0
 
 - name: Create systemctl service file
   template:
