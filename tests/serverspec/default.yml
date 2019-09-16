@@ -5,6 +5,7 @@
       when: ansible_os_family == 'FreeBSD'
     - name: trombik.redhat_repo
       when: ansible_os_family == 'RedHat'
+    - name: trombik.pip
     - ansible-role-buildbot
   vars:
     freebsd_pkg_repo:
@@ -78,5 +79,12 @@
           'db_url' : "sqlite:///state.sqlite",
       }
 
-    buildbot_extra_packages: "{% if ansible_os_family == 'Debian' %}[ 'python3-pip' ]{% elif ansible_os_family == 'RedHat' %}[ 'python36-pip', 'python36-devel', 'openssl-devel' ]{% else %}[ 'devel/py-buildbot-www' ]{% endif %}"
+    extra_packages_per_os:
+      FreeBSD:
+        - devel/py-buildbot-www
+      Debian: []
+      RedHat:
+        - python36-devel
+        - openssl-devel
+    buildbot_extra_packages: "{{ extra_packages_per_os[ansible_os_family] }}"
     buildbot_extra_pip_packages: "{% if ansible_os_family == 'Debian' %}[ 'buildbot-www', 'buildbot-waterfall-view', 'buildbot-console-view', 'buildbot-grid-view' ]{% else %}[]{% endif %}"
