@@ -42,6 +42,16 @@
   become_user: "{{ buildbot_create_master_user }}"
   notify: Restart buildbot
 
+- name: Create buildbot_extra_cfg
+  template:
+    src: extra.cfg.j2
+    dest: "{{ buildbot_conf_dir }}/{{ item.name }}"
+    owner: "{{ buildbot_user }}"
+    group: "{{ buildbot_group }}"
+    mode: 0640
+  notify: Restart buildbot
+  with_items: "{{ buildbot_extra_cfg }}"
+
 - name: Create master.cfg
   template:
     src: master.cfg.j2

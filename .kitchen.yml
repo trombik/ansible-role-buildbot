@@ -56,3 +56,13 @@ suites:
     verifier:
       name: shell
       command: rspec -c -f d -I tests/serverspec tests/serverspec/default_spec.rb
+
+  - name: buildbot_travis
+    provisioner:
+      name: ansible_playbook
+      playbook: tests/serverspec/buildbot_travis.yml
+    verifier:
+      name: shell
+      command: rspec -c -f d -I tests/serverspec tests/serverspec/buildbot_travis_spec.rb
+    includes:
+      - freebsd-12.0-amd64

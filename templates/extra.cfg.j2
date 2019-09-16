@@ -1,0 +1,6 @@
+{% if item.type == 'yaml' or item.type == 'yaml' %}
+# Managed by ansible
+{{ item.content | to_nice_yaml }}
+{% else %}
+{{ item.content }}
+{% endif %}

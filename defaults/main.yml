@@ -11,6 +11,7 @@ buildbot_conf_file: "{{ buildbot_conf_dir }}/master.cfg"
 buildbot_executable: "{{ __buildbot_executable }}"
 
 buildbot_master_cfg_content: ""
+buildbot_extra_cfg: []
 buildbot_flags: ""
 buildbot_create_master_executable: "{{ buildbot_executable }}"
 buildbot_create_master_user: "{{ buildbot_user }}"

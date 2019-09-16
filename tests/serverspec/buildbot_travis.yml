@@ -1,0 +1,93 @@
+---
+- hosts: localhost
+  roles:
+    - name: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - name: trombik.redhat_repo
+      when: ansible_os_family == 'RedHat'
+    - ansible-role-buildbot
+  vars:
+    freebsd_pkg_repo:
+      # disable the default repository. `quarterly` does not have buildbot 2.x yet
+      FreeBSD:
+        enabled: "false"
+        state: present
+      FreeBSD_latest:
+        enabled: "true"
+        state: present
+        url: http://192.168.1.118/packages/12_0-trombik
+        signature_type: NONE
+        mirror_type: HTTP
+
+    redhat_repo:
+      epel:
+        mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=epel-{{ ansible_distribution_major_version }}&arch={{ ansible_architecture }}"
+        gpgcheck: yes
+        enabled: yes
+        description: EPEL
+
+    buildbot_package: devel/py-buildbot_travis
+    buildbot_create_master_executable: bbtravis
+    buildbot_create_master_flags: ""
+    buildbot_conf_dir: "{% if ansible_os_family == 'Debian' %}{{ buildbot_root_dir }}/masters/default{% else %}{{ buildbot_root_dir }}{% endif %}"
+    buildbot_flags_ubuntu: |
+      MASTER_ENABLED[1]=1
+      MASTER_NAME[1]="default"
+      MASTER_USER[1]="buildbot"
+      MASTER_BASEDIR[1]="{{ buildbot_conf_dir }}"
+      MASTER_OPTIONS[1]=""
+      MASTER_PREFIXCMD[1]=""
+    buildbot_flags_freebsd: |
+      buildbot_basedir="{{ buildbot_conf_dir }}"
+      buildbot_user="{{ buildbot_user }}"
+
+    buildbot_flags: "{% if ansible_os_family == 'FreeBSD' %}{{ buildbot_flags_freebsd }}{% elif ansible_os_family == 'Debian' %}{{ buildbot_flags_ubuntu }}{% endif %}"
+    buildbot_extra_packages: "{% if ansible_os_family == 'Debian' %}[ 'python3-pip' ]{% elif ansible_os_family == 'RedHat' %}[ 'python36-pip', 'python36-devel', 'openssl-devel' ]{% else %}[ 'devel/py-buildbot-www' ]{% endif %}"
+    buildbot_extra_pip_packages: "{% if ansible_os_family == 'Debian' %}[ 'buildbot-www', 'buildbot-waterfall-view', 'buildbot-console-view', 'buildbot-grid-view' ]{% else %}[]{% endif %}"
+
+    buildbot_extra_cfg:
+      - name: cfg.yml
+        type: yaml
+        content:
+          env: {}
+          not_important_files: []
+          projects:
+          -   branches:
+              - master
+              name: foo
+              repository: file:///home/vagrant/foo
+              stages: []
+              tags:
+              - example
+              vcs_type: git+poller
+          stages: []
+          workers:
+          -   id: 1942349253
+              name: worker1
+              number: 1
+              password: pass
+              type: Worker
+          -   id: 2405852087
+              name: worker2
+              number: 1
+              password: pass
+              type: Worker
+    buildbot_master_cfg_content: |
+      from buildbot_travis import TravisConfigurator
+      #from buildbot.plugins import *
+      import os
+      c = BuildmasterConfig = {}
+      c['builders'] = []
+      c['schedulers'] = []
+      c['protocols'] = {'pb': {'port': 9989}}
+      c['change_source'] = []
+      c['services'] = []
+      c['title'] = "Hello World CI"
+      c['titleURL'] = "https://buildbot.github.io/hello-world/"
+      c['buildbotURL'] = "http://{{ ansible_em0.ipv4[0].address }}:8010/"
+      c['www'] = dict(port=8010,
+                    plugins=dict(waterfall_view={}, console_view={}, grid_view={}))
+      c['db'] = {
+        'db_url' : "sqlite:///state.sqlite",
+      }
+      TravisConfigurator(BuildmasterConfig, basedir).fromYaml('{{ buildbot_conf_dir }}/cfg.yml')
