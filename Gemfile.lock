@@ -152,7 +152,7 @@ GEM
     unicode-display_width (1.6.0)
     websocket-driver (0.7.0)
       websocket-extensions (>= 0.1.0)
-    websocket-extensions (0.1.3)
+    websocket-extensions (0.1.5)
     winrm (2.3.2)
       builder (>= 2.1.2)
       erubis (~> 2.7)
