@@ -20,4 +20,5 @@
     src: FreeBSD.rcd.j2
     dest: /etc/rc.conf.d/buildbot
     validate: sh -n %s
+    mode: "0644"
   notify: Restart buildbot

@@ -21,4 +21,5 @@
     src: Ubuntu.default.j2
     dest: /etc/default/buildbot
     validate: sh -n %s
+    mode: "0644"
   notify: Restart buildbot

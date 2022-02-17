@@ -1,11 +1,11 @@
 ---
 
 - name: fetch ports.tar.gz
-  command: "ftp -o /var/tmp/ports.tar.gz https://ftp.openbsd.org/pub/OpenBSD/{{ ansible_distribution_version}}/ports.tar.gz"
+  command: "ftp -o /var/tmp/ports.tar.gz https://ftp.openbsd.org/pub/OpenBSD/{{ ansible_distribution_version }}/ports.tar.gz"
   args:
     creates: /var/tmp/ports.tar.gz
 
 - name: Install ports tree
-  command: "tar -xzf /var/tmp/ports.tar.gz -C /usr"
+  command: "tar -xzf /var/tmp/ports.tar.gz -C /usr"  # noqa command-instead-of-module
   args:
     creates: /usr/ports/Makefile
