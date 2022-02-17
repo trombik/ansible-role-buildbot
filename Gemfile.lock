@@ -82,7 +82,7 @@ GEM
       unicode-display_width (~> 1.0, >= 1.0.1)
     ruby-progressbar (1.10.0)
     rubyntlm (0.6.2)
-    rubyzip (1.2.3)
+    rubyzip (1.3.0)
     serverspec (2.41.4)
       multi_json
       rspec (~> 3.0)
