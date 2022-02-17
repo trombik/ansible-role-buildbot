@@ -33,6 +33,7 @@ service = case os[:family]
           else
             "buildbot"
           end
+service_proxy = "haproxy"
 user    = "buildbot"
 group   = "buildbot"
 ports   = [8010]
@@ -56,6 +57,12 @@ default_group = case os[:family]
                 else
                   "root"
                 end
+
+base_url = "http://localhost:8000"
+buildbot_users = [
+  { name: "admin", password: "password" },
+  { name: "guest", password: "guest" }
+]
 
 unless package.nil?
   describe package(package) do
@@ -123,4 +130,26 @@ ports.each do |p|
   describe port(p) do
     it { should be_listening }
   end
+end
+
+describe service service_proxy do
+  it { should be_running }
+  it { should be_enabled }
+end
+
+buildbot_users.each do |u|
+  describe command "curl -v --user #{u[:name].shellescape}:#{u[:password].shellescape} #{base_url.shellescape + '/'}" do
+    its(:exit_status) { should eq 0 }
+    its(:stderr) { should match(/#{Regexp.escape("HTTP/1.1 200 OK")}/) }
+    its(:stdout) { should match(/Hello World CI/) }
+  end
+end
+
+describe command "curl -v #{base_url.shellescape + '/'}" do
+  its(:exit_status) { should eq 0 }
+
+  its(:stderr) { should_not match(/#{Regexp.escape("HTTP/1.1 200 OK")}/) }
+  its(:stderr) { should match(/#{Regexp.escape("HTTP/1.1 401 Unauthorized")}/) }
+  its(:stdout) { should_not match(/Hello World CI/) }
+  its(:stdout) { should match(/Unauthorized/) }
 end
