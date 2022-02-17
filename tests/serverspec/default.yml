@@ -5,27 +5,12 @@
       when: ansible_os_family == 'FreeBSD'
     - name: trombik.redhat_repo
       when: ansible_os_family == 'RedHat'
+    - name: trombik.pip
     - ansible-role-buildbot
+    - name: trombik.buildbot_worker
   vars:
-    freebsd_pkg_repo:
-      # disable the default repository. `quarterly` does not have buildbot 2.x yet
-      FreeBSD:
-        enabled: "false"
-        state: present
-      FreeBSD_latest:
-        enabled: "true"
-        state: present
-        url: pkg+https://pkg.FreeBSD.org/${ABI}/latest
-        signature_type: fingerprints
-        fingerprints: /usr/share/keys/pkg
-        mirror_type: srv
-
-    redhat_repo:
-      epel:
-        mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=epel-{{ ansible_distribution_major_version }}&arch={{ ansible_architecture }}"
-        gpgcheck: yes
-        enabled: yes
-        description: EPEL
+    project_worker_name: example-worker
+    project_worker_password: pass
 
     buildbot_conf_dir: "{% if ansible_os_family == 'Debian' %}{{ buildbot_root_dir }}/masters/default{% else %}{{ buildbot_root_dir }}{% endif %}"
     buildbot_flags_ubuntu: |
@@ -43,12 +28,13 @@
     buildbot_master_cfg_content: |
       from buildbot.plugins import *
       c = BuildmasterConfig = {}
-      c['workers'] = [worker.Worker("example-worker", "pass")]
+      c['workers'] = [worker.Worker("{{ project_worker_name }}", "{{ project_worker_password }}")]
       c['protocols'] = {'pb': {'port': 9989}}
       c['change_source'] = []
       c['change_source'].append(changes.GitPoller(
               'git://github.com/buildbot/hello-world.git',
               workdir='gitpoller-workdir', branch='master',
+              gitbin='git',
               pollInterval=300))
       c['schedulers'] = []
       c['schedulers'].append(schedulers.SingleBranchScheduler(
@@ -66,7 +52,7 @@
       c['builders'] = []
       c['builders'].append(
           util.BuilderConfig(name="runtests",
-            workernames=["example-worker"],
+            workernames=["{{ project_worker_name }}"],
             factory=factory))
       c['services'] = []
       c['title'] = "Hello World CI"
@@ -78,5 +64,101 @@
           'db_url' : "sqlite:///state.sqlite",
       }
 
-    buildbot_extra_packages: "{% if ansible_os_family == 'Debian' %}[ 'python3-pip' ]{% elif ansible_os_family == 'RedHat' %}[ 'python36-pip', 'python36-devel', 'openssl-devel' ]{% else %}[ 'devel/py-buildbot-www' ]{% endif %}"
-    buildbot_extra_pip_packages: "{% if ansible_os_family == 'Debian' %}[ 'buildbot-www', 'buildbot-waterfall-view', 'buildbot-console-view', 'buildbot-grid-view' ]{% else %}[]{% endif %}"
+    os_buildbot_extra_packages:
+      FreeBSD:
+        - devel/py-buildbot-www
+      RedHat:
+        - python36-pip
+        - python36-devel
+        - openssl-devel
+      Debian:
+        - python3-pip
+
+    buildbot_extra_packages: "{{ os_buildbot_extra_packages[ansible_os_family] | default([]) }}"
+    os_buildbot_extra_pip_packages:
+      Debian:
+        - buildbot-www
+        - buildbot-waterfall-view
+        - buildbot-console-view
+        - buildbot-grid-view
+    buildbot_extra_pip_packages: "{{ os_buildbot_extra_pip_packages[ansible_os_family] | default([]) }}"
+
+    # ________________________________________________buildbot_worker
+    os_buildbot_worker_flags:
+      FreeBSD: |
+        buildbot_worker_basedir="{{ buildbot_worker_conf_dir }}"
+      # "
+      Debian: |
+        #WORKER_RUNNER=/usr/bin/buildbot-worker
+
+        # 'true|yes|1' values in WORKER_ENABLED to enable instance and 'false|no|0' to
+        # disable. Other values will be considered as syntax error.
+
+        WORKER_ENABLED[1]=1                    # 1-enabled, 0-disabled
+        WORKER_NAME[1]="default"               # short name printed on start/stop
+        WORKER_USER[1]="buildbot"              # user to run worker as
+        WORKER_BASEDIR[1]="{{ buildbot_worker_conf_dir }}"  # basedir to worker (absolute path)
+        WORKER_OPTIONS[1]=""                   # buildbot options
+        WORKER_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
+    # "
+
+    buildbot_worker_flags: "{{ os_buildbot_worker_flags[ansible_os_family] | default('') }}"
+    buildbot_worker_config: |
+      import os
+      from buildbot_worker.bot import Worker
+      from twisted.application import service
+      basedir = '{{ buildbot_worker_conf_dir }}'
+      rotateLength = 10000000
+      maxRotatedFiles = 10
+      # if this is a relocatable tac file, get the directory containing the TAC
+      if basedir == '.':
+          import os.path
+          basedir = os.path.abspath(os.path.dirname(__file__))
+      # note: this line is matched against to check that this is a worker
+      # directory; do not edit it.
+      application = service.Application('buildbot-worker')
+      from twisted.python.logfile import LogFile
+      from twisted.python.log import ILogObserver, FileLogObserver
+      logfile = LogFile.fromFullPath(
+          os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
+          maxRotatedFiles=maxRotatedFiles)
+      application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+      buildmaster_host = 'localhost'
+      port = 9989
+      workername = '{{ project_worker_name }}'
+      passwd = '{{ project_worker_password }}'
+      keepalive = 600
+      umask = None
+      maxdelay = 300
+      numcpus = None
+      allow_shutdown = None
+      maxretries = None
+      s = Worker(buildmaster_host, port, workername, passwd, basedir,
+                 keepalive, umask=umask, maxdelay=maxdelay,
+                 numcpus=numcpus, allow_shutdown=allow_shutdown,
+                 maxRetries=maxretries)
+      s.setServiceParent(application)
+
+    # _______________________________________freebsd_pkg_repo
+    # use my own packages because ones in ports have been broken.
+    freebsd_pkg_repo:
+      FreeBSD:
+        enabled: "false"
+        state: present
+      # enable my own package repository, where the latest package is
+      # available
+      FreeBSD_devel:
+        enabled: "true"
+        state: present
+        url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.', '') }}{{ansible_architecture}}-default-default/"
+        mirror_type: http
+        signature_type: none
+        priority: 100
+
+    # _______________________________________redhat_repo
+    redhat_repo:
+      epel:
+        mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=epel-{{ ansible_distribution_major_version }}&arch={{ ansible_architecture }}"
+        gpgcheck: yes
+        enabled: yes
+        description: EPEL
