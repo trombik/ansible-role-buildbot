@@ -4,3 +4,4 @@ roles:
   - name: trombik.pip
   - name: trombik.redhat_repo
   - name: trombik.buildbot_worker
+  - name: trombik.haproxy
