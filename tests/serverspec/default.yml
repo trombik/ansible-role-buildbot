@@ -15,6 +15,10 @@
     project_backend_host: 127.0.0.1
     project_frontend_port: 8000
     project_backend_port: 8010
+    project_user_admin: admin
+    project_user_admin_password: password
+    project_user_guest: guest
+    project_user_guest_password: guest
 
     buildbot_conf_dir: "{% if ansible_os_family == 'Debian' %}{{ buildbot_root_dir }}/masters/default{% else %}{{ buildbot_root_dir }}{% endif %}"
     buildbot_flags_ubuntu: |
@@ -245,7 +249,13 @@
 
       frontend http-in
         bind *:{{ project_frontend_port }}
+        acl auth_ok http_auth(my_users)
+        http-request auth unless auth_ok
         default_backend servers
+
+      userlist my_users
+        user {{ project_user_admin }} insecure-password {{ project_user_admin_password }}
+        user {{ project_user_guest }} insecure-password {{ project_user_guest_password }}
 
       backend servers
         option forwardfor
