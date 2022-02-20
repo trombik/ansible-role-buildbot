@@ -1,0 +1,37 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+platforms:
+  - name: buildbot
+    box: trombik/ansible-freebsd-13.0-amd64
+    interfaces:
+      - network_name: public_network
+        dhcp: true
+      - network_name: private_network
+        ip: 192.168.56.100/24
+    instance_raw_config_args:
+      - "vm.network 'forwarded_port', guest: 8000, host: 8000"
+  - name: worker1
+    box: trombik/ansible-freebsd-13.0-amd64
+    interfaces:
+      - network_name: public_network
+        dhcp: true
+      - network_name: private_network
+        ip: 192.168.56.200/24
+        auto_config: true
+provisioner:
+  name: ansible
+  options:
+    vv: True
+    become: True
+  config_options:
+    defaults:
+      verbosity: 2
+      stdout_callback: yaml
+      force_color: yes
+      allow_world_readable_tmpfiles: yes
+syntax: false
+verifier:
+  name: ansible
