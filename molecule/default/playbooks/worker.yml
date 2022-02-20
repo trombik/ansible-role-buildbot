@@ -1,0 +1,80 @@
+---
+- name: Converge on worker1
+  hosts: worker1
+  roles:
+    - name: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - name: trombik.buildbot_worker
+  vars:
+    project_buildbot_host: 192.168.56.100
+    project_worker_name: example-worker
+    os_buildbot_worker_flags:
+      FreeBSD: |
+        buildbot_worker_basedir="{{ buildbot_worker_conf_dir }}"
+      # "
+      Debian: |
+        #WORKER_RUNNER=/usr/bin/buildbot-worker
+
+        # 'true|yes|1' values in WORKER_ENABLED to enable instance and 'false|no|0' to
+        # disable. Other values will be considered as syntax error.
+
+        WORKER_ENABLED[1]=1                    # 1-enabled, 0-disabled
+        WORKER_NAME[1]="default"               # short name printed on start/stop
+        WORKER_USER[1]="buildbot"              # user to run worker as
+        WORKER_BASEDIR[1]="{{ buildbot_worker_conf_dir }}"  # basedir to worker (absolute path)
+        WORKER_OPTIONS[1]=""                   # buildbot options
+        WORKER_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
+    # "
+
+    buildbot_worker_flags: "{{ os_buildbot_worker_flags[ansible_os_family] | default('') }}"
+    buildbot_worker_config: |
+      import os
+      from buildbot_worker.bot import Worker
+      from twisted.application import service
+      basedir = '{{ buildbot_worker_conf_dir }}'
+      rotateLength = 10000000
+      maxRotatedFiles = 10
+      # if this is a relocatable tac file, get the directory containing the TAC
+      if basedir == '.':
+          import os.path
+          basedir = os.path.abspath(os.path.dirname(__file__))
+      # note: this line is matched against to check that this is a worker
+      # directory; do not edit it.
+      application = service.Application('buildbot-worker')
+      from twisted.python.logfile import LogFile
+      from twisted.python.log import ILogObserver, FileLogObserver
+      logfile = LogFile.fromFullPath(
+          os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
+          maxRotatedFiles=maxRotatedFiles)
+      application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+      buildmaster_host = '{{ project_buildbot_host }}'
+      port = 9989
+      workername = '{{ project_worker_name }}'
+      passwd = 'pass'
+      keepalive = 600
+      umask = None
+      maxdelay = 300
+      numcpus = None
+      allow_shutdown = None
+      maxretries = None
+      s = Worker(buildmaster_host, port, workername, passwd, basedir,
+                 keepalive, umask=umask, maxdelay=maxdelay,
+                 numcpus=numcpus, allow_shutdown=allow_shutdown,
+                 maxRetries=maxretries)
+      s.setServiceParent(application)
+
+    # _______________________________________freebsd_pkg_repo
+    # use my own packages because ones in ports have been broken.
+    freebsd_pkg_repo:
+      FreeBSD:
+        enabled: "false"
+        state: present
+      # enable my own package repository, where the latest package is
+      # available
+      FreeBSD_devel:
+        enabled: "true"
+        state: present
+        url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.', '') }}{{ansible_architecture}}-default-default/"
+        mirror_type: http
+        signature_type: none
+        priority: 100

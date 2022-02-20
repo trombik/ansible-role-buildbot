@@ -1,0 +1,11 @@
+---
+# This is an example playbook to execute Ansible tests.
+
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+  - name: Run spec
+    command: "bundle exec rake -C {{ lookup('env','MOLECULE_SCENARIO_DIRECTORY') }} spec:{{ ansible_hostname }}"
+    delegate_to: localhost
+    changed_when: false

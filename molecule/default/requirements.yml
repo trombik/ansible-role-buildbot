@@ -1,0 +1,8 @@
+---
+roles:
+  - name: trombik.freebsd_pkg_repo
+  - name: trombik.pip
+  - name: trombik.redhat_repo
+  - name: trombik.buildbot_worker
+  - name: trombik.haproxy
+  - name: trombik.git
