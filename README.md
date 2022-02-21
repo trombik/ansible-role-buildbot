@@ -1,5 +1,8 @@
 # `trombik.buildbot`
 
+[![kitchen](https://github.com/trombik/ansible-role-buildbot/actions/workflows/kitchen.yml/badge.svg)](https://github.com/trombik/ansible-role-buildbot/actions/workflows/kitchen.yml)
+[![molecule](https://github.com/trombik/ansible-role-buildbot/actions/workflows/molecule.yml/badge.svg)](https://github.com/trombik/ansible-role-buildbot/actions/workflows/molecule.yml)
+
 Install `buildbot` master. For `buildbot` worker, use
 [`trombik.buildbot_worker`](https://github.com/trombik/ansible-role-buildbot_worker) role.
 
