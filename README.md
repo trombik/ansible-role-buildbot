@@ -7,11 +7,12 @@ Install `buildbot` master. For `buildbot` worker, use
 [`trombik.buildbot_worker`](https://github.com/trombik/ansible-role-buildbot_worker) role.
 
 A complete master-worker setup can be found at
-[tests/integration/master_worker](tests/integration/master_worker). Install
-`vagrant` and `VirtualBox`, than type:
+[molecule/default/playbooks](molecule/default/playbooks). To run the test, you
+need [`tox`](https://tox.wiki/en/latest/).
 
 ```sh
-bundle exec rake prepare
+pip3 install --user tox
+~/.local/bin/tox
 ```
 
 The web interface is located at
